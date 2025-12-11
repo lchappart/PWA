@@ -36,6 +36,7 @@ let currentCity = null;
 document.addEventListener('DOMContentLoaded', () => {
     updateNotifyButton();
     registerServiceWorker();
+    setupEventListeners();
 });
 
 // ===== Service Worker =====
@@ -113,7 +114,31 @@ async function requestNotificationPermission() {
 }
 
 function sendWeatherNotification(city, message, type = 'info') {
-  
+    // Vérifier que les notifications sont autorisées
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+        console.log('Notifications non autorisées');
+        return;
+    }
+
+    // Créer et afficher la notification
+    const notification = new Notification(`MétéoPWA - ${city}`, {
+        body: message,
+        icon: 'icons/icon-192.png',
+        badge: 'icons/icon-72.png',
+        tag: `weather-${type}-${Date.now()}`, // Tag unique pour éviter les doublons
+        requireInteraction: false
+    });
+
+    // Fermer automatiquement après 5 secondes
+    setTimeout(() => {
+        notification.close();
+    }, 5000);
+
+    // Gérer le clic sur la notification
+    notification.onclick = () => {
+        window.focus();
+        notification.close();
+    };
 }
 // ===== Recherche et API Météo =====
 async function handleSearch() {
@@ -209,11 +234,11 @@ function displayWeather(data, cityName) {
             const temp = hourly.temperature_2m[hourIndex];
             const code = hourly.weather_code[hourIndex];
             const isRain = CONFIG.RAIN_CODES.includes(code);
-            const isHighTemp = temp > CONFIG.TEMP_THRESHOLD;
+            const isLowTemp = temp < CONFIG.TEMP_THRESHOLD;
             
             let alertClass = '';
             if (isRain) alertClass = 'rain-alert';
-            else if (isHighTemp) alertClass = 'temp-alert';
+            else if (isLowTemp) alertClass = 'temp-alert';
 
             hourlyItems.push(`
                 <div class="hourly-item ${alertClass}">
@@ -251,8 +276,8 @@ function checkWeatherAlerts(data, cityName) {
                 rainHour = i;
             }
             
-            // Vérifier la température > 10°C
-            if (!tempAlert && temp > CONFIG.TEMP_THRESHOLD) {
+            // Vérifier la température < 10°C
+            if (!tempAlert && temp < CONFIG.TEMP_THRESHOLD) {
                 tempAlert = true;
                 highTemp = Math.round(temp);
             }
@@ -271,7 +296,7 @@ function checkWeatherAlerts(data, cityName) {
     if (tempAlert) {
         sendWeatherNotification(
             cityName,
-            `🌡️ Température supérieure à ${CONFIG.TEMP_THRESHOLD}°C prévue (${highTemp}°C)`,
+            `🌡️ Température sous ${CONFIG.TEMP_THRESHOLD}°C prévue (${highTemp}°C)`,
             'temp'
         );
     }
@@ -329,4 +354,39 @@ function showError(message) {
 
 function hideError() {
     elements.errorMessage.classList.add('hidden');
+}
+
+// ===== Event Listeners =====
+// Ajout des event listeners pour les interactions utilisateur
+function setupEventListeners() {
+    // Recherche de ville
+    elements.searchBtn.addEventListener('click', handleSearch);
+    elements.cityInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    });
+
+    // Notifications
+    elements.notifyBtn.addEventListener('click', requestNotificationPermission);
+
+    // Thème sombre/clair
+    elements.themeToggle.addEventListener('click', toggleTheme);
+    
+    // Initialiser le thème
+    const savedTheme = localStorage.getItem(CONFIG.STORAGE_KEY_THEME) || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeToggle(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem(CONFIG.STORAGE_KEY_THEME, newTheme);
+    updateThemeToggle(newTheme);
+}
+
+function updateThemeToggle(theme) {
+    elements.themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
 }

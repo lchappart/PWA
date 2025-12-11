@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Application météo PWA - Consultez la météo de votre ville">
+    <meta name="theme-color" content="#2196F3">
+    <title>MétéoPWA</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌤️ MétéoPWA</h1>
+            <div class="header-controls">
+                <button id="theme-toggle" class="btn-icon" aria-label="Changer le thème">🌙</button>
+                <button id="notify-btn" class="btn-icon">🔔 Activer les notifications</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="search-section">
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        id="city-input" 
+                        placeholder="Rechercher une ville..." 
+                        autocomplete="off"
+                    >
+                    <button id="search-btn" class="btn-primary">🔍 Rechercher</button>
+                </div>
+            </section>
+
+            <div id="error-message" class="error-message hidden"></div>
+            <div id="loading" class="loading hidden">⏳ Chargement...</div>
+
+            <section id="weather-section" class="weather-section hidden">
+                <div class="weather-header">
+                    <h2 id="city-name">-</h2>
+                    <button id="favorite-btn" class="btn-icon" aria-label="Ajouter aux favoris">⭐</button>
+                </div>
+
+                <div class="current-weather">
+                    <div class="temperature-large">
+                        <span id="temperature">-</span>°C
+                    </div>
+                    <div class="weather-icon-large" id="weather-icon">🌤️</div>
+                </div>
+
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Ressenti</span>
+                        <span class="detail-value" id="feels-like">-°C</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Vent</span>
+                        <span class="detail-value" id="wind">- km/h</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Humidité</span>
+                        <span class="detail-value" id="humidity">-%</span>
+                    </div>
+                </div>
+
+                <div class="hourly-forecast">
+                    <h3>Prévisions (4h)</h3>
+                    <div id="hourly-list" class="hourly-list"></div>
+                </div>
+            </section>
+
+            <section id="favorites-section" class="favorites-section">
+                <h3>Villes favorites</h3>
+                <div id="favorites-list" class="favorites-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
