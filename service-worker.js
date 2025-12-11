@@ -1,31 +1,50 @@
 // ===== CONFIGURATION =====
-// Modifier ces valeurs pour votre application
+// Détection automatique du chemin de base pour GitHub Pages
+const BASE_PATH = self.location.pathname.replace('/service-worker.js', '');
 const CACHE_NAME = 'meteo-pwa-v1';
+
+// Fonction pour créer les URLs complètes avec le bon préfixe
+function getAssetUrl(path) {
+    // Normaliser le chemin
+    const normalizedPath = path.startsWith('/') ? path : '/' + path;
+    // Construire l'URL complète
+    return new URL(BASE_PATH + normalizedPath, self.location.origin).href;
+}
+
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/style.css',
-    '/app.js',
-    '/manifest.json',
-    '/icons/icon-72.png',
-    '/icons/icon-96.png',
-    '/icons/icon-128.png',
-    '/icons/icon-144.png',
-    '/icons/icon-152.png',
-    '/icons/icon-192.png',
-    '/icons/icon-384.png',
-    '/icons/icon-512.png'
+    getAssetUrl('index.html'),
+    getAssetUrl('style.css'),
+    getAssetUrl('app.js'),
+    getAssetUrl('manifest.json'),
+    getAssetUrl('icons/icon-72.png'),
+    getAssetUrl('icons/icon-96.png'),
+    getAssetUrl('icons/icon-128.png'),
+    getAssetUrl('icons/icon-144.png'),
+    getAssetUrl('icons/icon-152.png'),
+    getAssetUrl('icons/icon-192.png'),
+    getAssetUrl('icons/icon-384.png'),
+    getAssetUrl('icons/icon-512.png')
 ];
 
 // ===== INSTALL =====
 // Mise en cache initiale des fichiers statiques
 self.addEventListener('install', (event) => {
     console.log('[SW] Installation...');
+    console.log('[SW] BASE_PATH:', BASE_PATH);
+    console.log('[SW] ASSETS:', ASSETS);
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('[SW] Mise en cache des assets');
-                return cache.addAll(ASSETS);
+                // Utiliser Promise.allSettled pour ne pas échouer si un fichier est manquant
+                return Promise.allSettled(
+                    ASSETS.map(url => 
+                        cache.add(url).catch(err => {
+                            console.warn('[SW] Erreur lors de la mise en cache de', url, err);
+                            return null;
+                        })
+                    )
+                );
             })
             .then(() => {
                 // Force l'activation immédiate du nouveau SW
@@ -133,7 +152,7 @@ async function cacheFirst(request) {
         
         // Si c'est une page HTML, retourner la page d'accueil en cache
         if (request.headers.get('accept')?.includes('text/html')) {
-            const fallback = await caches.match('/index.html');
+            const fallback = await caches.match(getAssetUrl('index.html'));
             if (fallback) return fallback;
         }
         
