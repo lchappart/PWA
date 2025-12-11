@@ -13,6 +13,7 @@ const elements = {
     cityInput: document.getElementById('city-input'),
     searchBtn: document.getElementById('search-btn'),
     notifyBtn: document.getElementById('notify-btn'),
+    testNotifyBtn: document.getElementById('test-notify-btn'),
     themeToggle: document.getElementById('theme-toggle'),
     weatherSection: document.getElementById('weather-section'),
     favoritesSection: document.getElementById('favorites-section'),
@@ -60,12 +61,18 @@ function updateNotifyButton() {
     if (!isNotificationSupported()) {
         elements.notifyBtn.textContent = '🔔 Non disponible (iOS)';
         elements.notifyBtn.disabled = true;
+        if (elements.testNotifyBtn) {
+            elements.testNotifyBtn.style.display = 'none';
+        }
         return;
     }
     
     if (!('Notification' in window)) {
         elements.notifyBtn.textContent = '🔔 Notifications non supportées';
         elements.notifyBtn.disabled = true;
+        if (elements.testNotifyBtn) {
+            elements.testNotifyBtn.style.display = 'none';
+        }
         return;
     }
 
@@ -75,13 +82,23 @@ function updateNotifyButton() {
         elements.notifyBtn.textContent = '✅ Notifications activées';
         elements.notifyBtn.classList.add('granted');
         elements.notifyBtn.classList.remove('denied');
+        // Afficher le bouton de test quand les notifications sont activées
+        if (elements.testNotifyBtn) {
+            elements.testNotifyBtn.style.display = 'flex';
+        }
     } else if (permission === 'denied') {
         elements.notifyBtn.textContent = '❌ Notifications bloquées';
         elements.notifyBtn.classList.add('denied');
         elements.notifyBtn.classList.remove('granted');
+        if (elements.testNotifyBtn) {
+            elements.testNotifyBtn.style.display = 'none';
+        }
     } else {
         elements.notifyBtn.textContent = '🔔 Activer les notifications';
         elements.notifyBtn.classList.remove('granted', 'denied');
+        if (elements.testNotifyBtn) {
+            elements.testNotifyBtn.style.display = 'none';
+        }
     }
 }
 
@@ -139,6 +156,26 @@ function sendWeatherNotification(city, message, type = 'info') {
         window.focus();
         notification.close();
     };
+}
+
+// ===== Test de notification =====
+function testNotification() {
+    if (!('Notification' in window)) {
+        showError('Les notifications ne sont pas supportées par votre navigateur.');
+        return;
+    }
+
+    if (Notification.permission !== 'granted') {
+        showError('Veuillez d\'abord activer les notifications en cliquant sur le bouton "Activer les notifications".');
+        return;
+    }
+
+    // Envoyer une notification de test
+    sendWeatherNotification(
+        'Test',
+        '🧪 Ceci est une notification de test ! Les notifications fonctionnent correctement. ✅',
+        'test'
+    );
 }
 // ===== Recherche et API Météo =====
 async function handleSearch() {
@@ -369,6 +406,11 @@ function setupEventListeners() {
 
     // Notifications
     elements.notifyBtn.addEventListener('click', requestNotificationPermission);
+    
+    // Test de notification
+    if (elements.testNotifyBtn) {
+        elements.testNotifyBtn.addEventListener('click', testNotification);
+    }
 
     // Thème sombre/clair
     elements.themeToggle.addEventListener('click', toggleTheme);
