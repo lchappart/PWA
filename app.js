@@ -58,6 +58,11 @@ function isNotificationSupported() {
 }
 
 function updateNotifyButton() {
+    // Toujours afficher le bouton de test
+    if (elements.testNotifyBtn) {
+        elements.testNotifyBtn.style.display = 'flex';
+    }
+
     if (!isNotificationSupported()) {
         elements.notifyBtn.textContent = '🔔 Non disponible (iOS)';
         elements.notifyBtn.disabled = true;
@@ -90,7 +95,6 @@ function updateNotifyButton() {
         if (elements.testNotifyBtn) {
             elements.testNotifyBtn.disabled = false;
             elements.testNotifyBtn.style.opacity = '1';
-            elements.testNotifyBtn.style.display = 'flex';
             elements.testNotifyBtn.title = 'Tester une notification';
         }
     } else if (permission === 'denied') {
