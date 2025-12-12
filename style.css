@@ -454,6 +454,32 @@ button {
         max-width: 100%;
     }
 
+    .btn-icon.btn-test {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    .btn-icon.btn-test::after {
+        content: '';
+    }
+
+    /* Masquer le texte "Test" sur très petits écrans, garder juste l'icône */
+    @media (max-width: 360px) {
+        .btn-icon.btn-test {
+            min-width: 40px;
+            padding: 0.5rem;
+        }
+        
+        .btn-icon.btn-test::before {
+            content: '🧪';
+        }
+        
+        .btn-icon.btn-test {
+            font-size: 0;
+            text-indent: -9999px;
+        }
+    }
+
     .search-section {
         margin-bottom: 1.5rem;
     }
