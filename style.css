@@ -131,6 +131,8 @@ button {
     font-size: 0.9rem;
     padding: 0.5rem 0.75rem;
     min-width: auto;
+    display: flex !important;
+    visibility: visible !important;
 }
 
 .btn-icon.btn-test:hover:not(:disabled) {

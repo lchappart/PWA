@@ -34,11 +34,27 @@ const elements = {
 let currentCity = null;
 
 // ===== Initialisation =====
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
+    // S'assurer que le bouton de test est visible (important pour le mode PWA)
+    if (elements.testNotifyBtn) {
+        elements.testNotifyBtn.style.display = 'flex';
+        elements.testNotifyBtn.style.visibility = 'visible';
+    } else {
+        console.warn('Bouton test-notify-btn non trouvé dans le DOM');
+    }
     updateNotifyButton();
     registerServiceWorker();
     setupEventListeners();
-});
+}
+
+// Initialisation selon l'état du DOM (important pour le mode PWA)
+if (document.readyState === 'loading') {
+    // DOM pas encore chargé, on attend DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    // DOM déjà chargé (mode PWA ou page déjà chargée)
+    initApp();
+}
 
 // ===== Service Worker =====
 async function registerServiceWorker() {
@@ -58,9 +74,10 @@ function isNotificationSupported() {
 }
 
 function updateNotifyButton() {
-    // Toujours afficher le bouton de test
+    // Toujours afficher le bouton de test (important pour le mode PWA)
     if (elements.testNotifyBtn) {
         elements.testNotifyBtn.style.display = 'flex';
+        elements.testNotifyBtn.style.visibility = 'visible';
     }
 
     if (!isNotificationSupported()) {
