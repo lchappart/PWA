@@ -171,4 +171,25 @@ self.addEventListener('message', (event) => {
     }
 });
 
+// ===== Gestion du clic sur les notifications =====
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then((clientList) => {
+                // Si une fenêtre est déjà ouverte, on la focus
+                for (let client of clientList) {
+                    if (client.url.includes(self.location.origin) && 'focus' in client) {
+                        return client.focus();
+                    }
+                }
+                // Sinon, on ouvre une nouvelle fenêtre
+                if (clients.openWindow) {
+                    return clients.openWindow('/');
+                }
+            })
+    );
+});
+
 console.log('[SW] Service Worker chargé');

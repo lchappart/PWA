@@ -134,6 +134,68 @@ function updateNotifyButton() {
     }
 }
 
+// Fonction helper pour afficher une notification (utilise le Service Worker si disponible)
+async function showNotification(title, options = {}) {
+    // Vérifier que les notifications sont autorisées
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+        console.log('Notifications non autorisées');
+        return null;
+    }
+
+    // Essayer d'abord avec le Service Worker (requis sur Android/Xiaomi)
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            if (registration && registration.showNotification) {
+                await registration.showNotification(title, {
+                    body: options.body || '',
+                    icon: options.icon || 'icons/icon-192.png',
+                    badge: options.badge || 'icons/icon-72.png',
+                    tag: options.tag || 'default',
+                    requireInteraction: options.requireInteraction || false,
+                    vibrate: options.vibrate || [200, 100, 200],
+                    data: options.data || {}
+                });
+                return { via: 'serviceWorker' };
+            }
+        } catch (swError) {
+            console.log('Erreur Service Worker notification, fallback:', swError);
+        }
+    }
+
+    // Fallback : notification directe (si supportée)
+    try {
+        const notification = new Notification(title, {
+            body: options.body || '',
+            icon: options.icon || 'icons/icon-192.png',
+            badge: options.badge || 'icons/icon-72.png',
+            tag: options.tag || 'default'
+        });
+
+        // Gérer le clic sur la notification
+        if (options.onclick) {
+            notification.onclick = options.onclick;
+        } else {
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+        }
+
+        // Fermer automatiquement si spécifié
+        if (options.autoClose !== false) {
+            setTimeout(() => {
+                notification.close();
+            }, options.duration || 5000);
+        }
+
+        return { via: 'direct', notification };
+    } catch (error) {
+        console.error('Erreur lors de l\'affichage de la notification:', error);
+        throw error;
+    }
+}
+
 async function requestNotificationPermission() {
     if (!('Notification' in window)) {
         showError('Les notifications ne sont pas supportées par votre navigateur.');
@@ -146,12 +208,24 @@ async function requestNotificationPermission() {
     }
 
     try {
+        // S'assurer que le Service Worker est prêt avant de demander la permission
+        if ('serviceWorker' in navigator) {
+            try {
+                await navigator.serviceWorker.ready;
+            } catch (swError) {
+                console.log('Service Worker pas encore prêt:', swError);
+            }
+        }
+
         const permission = await Notification.requestPermission();
         updateNotifyButton();
         
         if (permission === 'granted') {
-            // Notification de test
-            new Notification('MétéoPWA', {
+            // Attendre un peu pour que le Service Worker soit prêt
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Notification de test via Service Worker
+            await showNotification('MétéoPWA', {
                 body: 'Les notifications sont maintenant activées ! 🎉',
                 icon: 'icons/icon-192.png',
                 tag: 'welcome'
@@ -159,39 +233,28 @@ async function requestNotificationPermission() {
         }
     } catch (error) {
         console.error('Erreur lors de la demande de permission:', error);
+        showError('Erreur lors de l\'activation des notifications. Veuillez réessayer.');
     }
 }
 
-function sendWeatherNotification(city, message, type = 'info') {
-    // Vérifier que les notifications sont autorisées
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-        console.log('Notifications non autorisées');
-        return;
+async function sendWeatherNotification(city, message, type = 'info') {
+    try {
+        await showNotification(`MétéoPWA - ${city}`, {
+            body: message,
+            icon: 'icons/icon-192.png',
+            badge: 'icons/icon-72.png',
+            tag: `weather-${type}-${Date.now()}`, // Tag unique pour éviter les doublons
+            requireInteraction: false,
+            autoClose: true,
+            duration: 5000
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'envoi de la notification météo:', error);
     }
-
-    // Créer et afficher la notification
-    const notification = new Notification(`MétéoPWA - ${city}`, {
-        body: message,
-        icon: 'icons/icon-192.png',
-        badge: 'icons/icon-72.png',
-        tag: `weather-${type}-${Date.now()}`, // Tag unique pour éviter les doublons
-        requireInteraction: false
-    });
-
-    // Fermer automatiquement après 5 secondes
-    setTimeout(() => {
-        notification.close();
-    }, 5000);
-
-    // Gérer le clic sur la notification
-    notification.onclick = () => {
-        window.focus();
-        notification.close();
-    };
 }
 
 // ===== Test de notification =====
-function testNotification() {
+async function testNotification() {
     if (!('Notification' in window)) {
         showError('Les notifications ne sont pas supportées par votre navigateur.');
         return;
@@ -202,12 +265,20 @@ function testNotification() {
         return;
     }
 
-    // Envoyer une notification de test
-    sendWeatherNotification(
-        'Test',
-        '🧪 Ceci est une notification de test ! Les notifications fonctionnent correctement. ✅',
-        'test'
-    );
+    try {
+        // Envoyer une notification de test
+        await showNotification('MétéoPWA - Test', {
+            body: '🧪 Ceci est une notification de test ! Les notifications fonctionnent correctement. ✅',
+            icon: 'icons/icon-192.png',
+            badge: 'icons/icon-72.png',
+            tag: 'test-notification',
+            autoClose: true,
+            duration: 5000
+        });
+    } catch (error) {
+        console.error('Erreur lors du test de notification:', error);
+        showError('Erreur lors de l\'envoi de la notification de test. Vérifiez que le Service Worker est actif.');
+    }
 }
 // ===== Recherche et API Météo =====
 async function handleSearch() {
