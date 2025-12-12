@@ -124,6 +124,27 @@ button {
     border-color: var(--error);
 }
 
+.btn-icon.btn-test {
+    background-color: #9c27b0;
+    color: white;
+    border-color: #9c27b0;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    min-width: auto;
+}
+
+.btn-icon.btn-test:hover:not(:disabled) {
+    background-color: #7b1fa2;
+    border-color: #7b1fa2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow);
+}
+
+.btn-icon.btn-test:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 /* ===== Search Section ===== */
 .search-section {
     margin-bottom: 2rem;

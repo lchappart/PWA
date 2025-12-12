@@ -62,7 +62,9 @@ function updateNotifyButton() {
         elements.notifyBtn.textContent = '🔔 Non disponible (iOS)';
         elements.notifyBtn.disabled = true;
         if (elements.testNotifyBtn) {
-            elements.testNotifyBtn.style.display = 'none';
+            elements.testNotifyBtn.disabled = true;
+            elements.testNotifyBtn.style.opacity = '0.5';
+            elements.testNotifyBtn.title = 'Notifications non disponibles';
         }
         return;
     }
@@ -71,7 +73,9 @@ function updateNotifyButton() {
         elements.notifyBtn.textContent = '🔔 Notifications non supportées';
         elements.notifyBtn.disabled = true;
         if (elements.testNotifyBtn) {
-            elements.testNotifyBtn.style.display = 'none';
+            elements.testNotifyBtn.disabled = true;
+            elements.testNotifyBtn.style.opacity = '0.5';
+            elements.testNotifyBtn.title = 'Notifications non supportées';
         }
         return;
     }
@@ -82,22 +86,29 @@ function updateNotifyButton() {
         elements.notifyBtn.textContent = '✅ Notifications activées';
         elements.notifyBtn.classList.add('granted');
         elements.notifyBtn.classList.remove('denied');
-        // Afficher le bouton de test quand les notifications sont activées
+        // Activer le bouton de test quand les notifications sont activées
         if (elements.testNotifyBtn) {
+            elements.testNotifyBtn.disabled = false;
+            elements.testNotifyBtn.style.opacity = '1';
             elements.testNotifyBtn.style.display = 'flex';
+            elements.testNotifyBtn.title = 'Tester une notification';
         }
     } else if (permission === 'denied') {
         elements.notifyBtn.textContent = '❌ Notifications bloquées';
         elements.notifyBtn.classList.add('denied');
         elements.notifyBtn.classList.remove('granted');
         if (elements.testNotifyBtn) {
-            elements.testNotifyBtn.style.display = 'none';
+            elements.testNotifyBtn.disabled = true;
+            elements.testNotifyBtn.style.opacity = '0.5';
+            elements.testNotifyBtn.title = 'Notifications bloquées - Activez-les d\'abord';
         }
     } else {
         elements.notifyBtn.textContent = '🔔 Activer les notifications';
         elements.notifyBtn.classList.remove('granted', 'denied');
         if (elements.testNotifyBtn) {
-            elements.testNotifyBtn.style.display = 'none';
+            elements.testNotifyBtn.disabled = true;
+            elements.testNotifyBtn.style.opacity = '0.5';
+            elements.testNotifyBtn.title = 'Activez d\'abord les notifications pour tester';
         }
     }
 }
